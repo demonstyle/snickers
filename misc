@@ -1,0 +1,122 @@
+#!/bin/sh
+
+# Get contents in cart
+curl -i \
+  -H 'Accept: application/json' \
+  -H 'AppID: com.nike.commerce.nikedotcom.web' \
+  -H 'Content-Type: application/json; charset=UTF-8' \
+  -H 'Origin: https://www.nike.com' \
+  -H 'Referer: https://www.nike.com/cart' \
+  -H 'X-B3-SpanName: CiCCart' \
+  -H 'X-B3-TraceId: 0b849f31-57b8-48a5-9ea0-5e8bc28d3f1f' \
+  -H 'x-nike-visitid: 5' \
+  -H 'x-nike-visitorid: 6d326d40-52a3-4557-8309-62cabe81af24' \
+  'https://api.nike.com/buy/carts/v2/US/NIKE/NIKECOM'
+
+# Sample Response
+#
+# content-type: application/json;charset=utf-8
+# content-length: 577
+# x-b3-traceid: 0b849f31-57b8-48a5-9ea0-5e8bc28d3f1f
+# x-application-context: carts:prod:8080
+# access-control-allow-origin: https://www.nike.com
+# access-control-allow-credentials: true
+# access-control-expose-headers: Date,WWW-Authenticate
+# x-edgeconnect-midmile-rtt: 2
+# x-edgeconnect-origin-mex-latency: 105
+# cache-control: private, no-store
+# expires: Thu, 23 May 2019 00:38:48 GMT
+# date: Thu, 23 May 2019 00:38:48 GMT
+# set-cookie: bm_sz=9409DE4957846AACB84C555639857F7D~YAAQhCQ3Fwyn7cxqAQAAY0wg4gNb2jnlNkCQ+NSOZPuqWaKUMQCm8Z/lIZGhMWoZB1Hld1yJFjNq1TkTFFb+yj731y21DpFLXDVUyQoBNMPUi10L1G54Sxz3S/blFmZ2KXuJkx3XEJV/f2fjsUuaRqIYtVffiYLFw+KbWmMKIBoXvlMQyn3c6d4IEKcRXA==; Domain=.nike.com; Path=/; Expires=Thu, 23 May 2019 04:38:48 GMT; Max-Age=14400; HttpOnly
+# set-cookie: _abck=59D00E7C84DFC9EFC9FA38E49C88BD5F~-1~YAAQhCQ3Fw2n7cxqAQAAY0wg4gE2nKROxbbGhOQRRH75WiwhBTUrNS0wda0oGXuZqWGHsirhjCEDOg721QDRK0Xty9s1aF7bXepIRGBHLR/cwugfSLdhQXMR473Zf4quntfN5bGhzo+tL7f70nXYl8HiheESrLA2BBbvC0Vvyl1YlAwaLKpKpDf0/EP7mUndJESFrsyCNJ9Y8MEHNqqkg916YzLePzBOkMSSSgVBWCkTWNRF/yjOd+9CjTcJYPZSHnCzvvFqrKqlkRVufU1yBsQ0qnisg7qJv9A=~-1~-1~-1; Domain=.nike.com; Path=/; Expires=Fri, 22 May 2020 00:38:48 GMT; Max-Age=31536000; Secure
+
+# {"id":"d557a7b6-59da-4f0e-9460-adf9a7c16640","country":"US","currency":"USD","brand":"NIKE","channel":"NIKECOM","totals":{"subtotal":120,"discountTotal":0,"valueAddedServicesTotal":0,"total":120,"quantity":1},"items":[{"id":"5ecc3acf-0440-4794-9a37-93e51d522159","skuId":"a99d5708-37bf-5a05-83f6-b28d70f80b25","quantity":1,"priceInfo":{"price":120,"subtotal":120,"discount":0,"valueAddedServices":0,"total":120,"priceSnapshotId":"c4509ee8-c050-4165-83f7-407677f1d9c4","msrp":120,"fullPrice":120}}],"links":{"self":{"ref":"/buy/carts/v2/US/NIKE/NIKECOM"}},"resourceType":"cart"}%    
+
+# Get product id from sku
+curl -i \
+  'https://www.nike.com/checkout/services/v1/skus/a99d5708-37bf-5a05-83f6-b28d70f80b25?country=us&language=en-US'
+
+# Response
+#
+# HTTP/2 200
+# content-type: text/html; charset=utf-8
+# x-request-id: 425ed880-7cf3-11e9-92b0-1d08606d8f4e
+# x-b3-traceid: 464f01eba98ad750
+# etag: W/"3aa-FzCS3eGexb6XfXmX/gXwKROOnz4"
+# x-edgeconnect-midmile-rtt: 60
+# x-edgeconnect-origin-mex-latency: 99
+# x-akamai-transformed: 9 938 0 pmb=mTOE,1
+# cache-control: max-age=0
+# expires: Thu, 23 May 2019 00:39:44 GMT
+# date: Thu, 23 May 2019 00:39:44 GMT
+# content-length: 938
+# set-cookie: geoloc=cc=US,rc=CA,tp=vhigh,tz=PST,la=33.9733,lo=-118.2487; path=/; domain=.nike.com
+# set-cookie: anonymousId=8F845C6DE13674D526398CB67CC70321; expires=Fri, 24-May-2019 00:39:44 GMT; path=/; domain=.nike.com
+# set-cookie: ak_bmsc=ECB75EBA5634B69E7965BD3C768BB5F7173724C537260000D0EBE55C86867214~pl+aiY2LrQuwzvaI1Ea7uGTCQvzUNUXaLV2ezGLAhdHDD7cxw7Li3cP/T9T3FwcwXCAaJlzsub8C1VpztwWcsIYiW8/EGSVh7hM3W/WLDE9HRA6qYu3BIY1KcVX0cjrMgxzwBWw0USu8OpcrQEL/hyaCkKNjXtpNPmpNeJpi3YlQYQS5IF5EqWnBI/IaVzXkJY6RNEOsGXm5rC8QWEXcyHmAkB/EBJLlRNJWMCCMnUaZw=; expires=Thu, 23 May 2019 02:39:44 GMT; max-age=7200; path=/; domain=.nike.com; HttpOnly
+# set-cookie: bm_sz=F634DBC18FACB4314AA75638D1CFAFF9~YAAQxSQ3FzXQMc9qAQAAbiYh4gNtFc0RL0mJlDGYVBlA9Wm2k3ThaZ2r7Bkdt0zKalk5tCzxp5WSWY9EmxGBCFku8UKpUE6X/ZLu93AxQaZz1bFymECkVkAtl1W24+X8rC7jMUkd18BUAksp7TBsAbxxKgwNVihwyNNYFxsA7w4me36Td/XCUnxG8z8ueQ==; Domain=.nike.com; Path=/; Expires=Thu, 23 May 2019 04:39:44 GMT; Max-Age=14400; HttpOnly
+# set-cookie: _abck=8D315BDA61462597F4353BE595E67D99~-1~YAAQxSQ3FzbQMc9qAQAAbiYh4gHb8McGqJs01aFRzqTdhUn0LdngWt3plTUiNtFB+TevB+ohKhER1gKFnZCGRztmzZJyRw/wo9uES22PN28nugJWcR5kYJM6LXLZ8i7HX5UsiXz7WIA0GRjXofNoVciwI6i4hudxLtn8a2XNrWqpurZPZtLaDdlN0fgvjsghCmwv8V2OT4IE8I330ugKzHUqsDENfQNFhPMoQwP8m7rHL6Aeor0d6bDxXlH7C0qM9LlFXW4p7dWe0lcCxaa2QkiYTgDf+pAe6XM=~-1~-1~-1; Domain=.nike.com; Path=/; Expires=Fri, 22 May 2020 00:39:44 GMT; Max-Age=31536000; Secure
+
+# {"skus":[{"id":"a99d5708-37bf-5a05-83f6-b28d70f80b25","nikeSize":"10","countrySpecifications":[{"country":"US","localizedSize":"M 10 / W 11.5"}],"gtin":"00193145226456","product":{"id":"3a4be21a-b939-597c-a1bf-19d72ab29ac0","brand":"Nike","productType":"FOOTWEAR","styleColor":"CI2666-100","styleType":"INLINE","pid":"12629203","price":{"discounted":false},"content":{"fullTitle":"PG 3 NASA Basketball Shoe","subtitle":"Basketball Shoe","colorDescription":"White/Metallic Gold"},"imageSet":{"images":[{"company":"DotCom","view":"CI2666_100_A_PREM"},{"company":"DotCom","view":"CI2666_100_B_PREM"},{"company":"DotCom","view":"CI2666_100_C_PREM"},{"company":"DotCom","view":"CI2666_100_D_PREM"},{"company":"DotCom","view":"CI2666_100_E_PREM"},{"company":"DotCom","view":"CI2666_100_F_PREM"},{"company":"DotCom","view":"CI2666_100_N_PREM"},{"company":"DotCom","view":"CI2666_100_O_PREM"},{"company":"DotCom","view":"CI2666_100_P_PREM"}]}}}]}%  
+
+# Get payment options
+curl -i \
+  -H 'Accept: application/json' \
+  -H 'appid: com.nike.commerce.checkout.web' \
+  -H 'Content-Type: application/json; charset=UTF-8' \
+  -H 'x-nike-visitid: 5' \
+  -H 'x-nike-visitorid: 6d326d40-52a3-4557-8309-62cabe81af24' \
+  -d '{"country":"US","billingCountry":"US","currency":"USD","total":140.16,"clickAndCollect":false,"items":["3a4be21a-b939-597c-a1bf-19d72ab29ac0"],"shippingMethods":["STANDARD"]}' \
+  'https://api.nike.com/payment/options/v2'
+# HTTP/2 200 
+# content-type: application/json;charset=UTF-8
+# x-b3-traceid: 93e69177-9d97-4a9d-8d4e-07a03bfd642a
+# x-application-context: paymentoptions:prod:8080
+# content-length: 394
+# x-edgeconnect-midmile-rtt: 0
+# x-edgeconnect-origin-mex-latency: 80
+# cache-control: private, max-age=0
+# expires: Thu, 23 May 2019 00:54:52 GMT
+# date: Thu, 23 May 2019 00:54:52 GMT
+# access-control-max-age: 86400
+# access-control-allow-credentials: false
+# access-control-allow-headers: *
+# access-control-allow-methods: GET,POST,OPTIONS,PUT,DELETE
+# access-control-allow-origin: *
+# set-cookie: bm_sz=31D1B75C26D6FF8B15A87456449F9535~YAAQ5CQ3F1L278xqAQAABgMv4gPdxDSMQma7KccSFm5F+13kp9KWBEMa8YKW5xQKfchrd0epCCxQsBdj+OUS/U/uBC7d4z69Wk3vsOsZ2Bf6jFB+95qrMJe3BdnCdxSR7SKKobrFqk83QTXDdiJHWjOggz0uCP6Z9EUs2SYpNWBJcSCH+VC4BbIF0zGrJQ==; Domain=.nike.com; Path=/; Expires=Thu, 23 May 2019 04:54:52 GMT; Max-Age=14400; HttpOnly
+# set-cookie: _abck=8CFE2EEB908755E92B2A9A64847F4146~-1~YAAQ5CQ3F1P278xqAQAABgMv4gETINclfsBgybkoI4ju7bbwPD7ixj297aFAsTNz0qMA7VF5aariXyCLtD9kThGGJGr9CNc0SCmlNn8W/GxXxDzhjNIXqFdfRKpSqW9ldWMJfY6xI6DlKAGmhbGhOQRcT9K+xf6iTW7myJYarLbxUUcuxLv6H+DT+V/r22Kzz8S3T4ku7NaXzFCvF6+2RGMnfF7/+bqC5sC7hrC2sTGyQsRAbq7ePWUPtdMM7yNV3ze+ZG1gQ30EPylkT3ufnTkZEvgh37/DjcA=~-1~-1~-1; Domain=.nike.com; Path=/; Expires=Fri, 22 May 2020 00:54:52 GMT; Max-Age=31536000; Secure
+
+# {"country":"US","billingCountry":"US","paymentOptions":[{"name":"GiftCard","displayName":"GiftCard"},{"name":"CreditCard","displayName":"Credit Card","types":[{"name":"Visa","displayName":"Visa"},{"name":"MasterCard","displayName":"MasterCard"},{"name":"AmericanExpress","displayName":"American Express"},{"name":"Discover","displayName":"Discover"}]},{"name":"Paypal","displayName":"PayPal"}]}%  
+
+# Payment options
+curl -i \
+  -d '{"country":"US","currency":"USD","items":[{"id":"590a1625-638e-4cee-afbb-6c1292647601","skuId":"a99d5708-37bf-5a05-83f6-b28d70f80b25","shippingAddress":{"country":"US"},"quantity":1}],"promotionCodes":[]}' \
+  -H 'Accept: application/json' \
+  -H 'appid: com.nike.commerce.checkout.web' \
+  -H 'x-nike-visitorid: 6d326d40-52a3-4557-8309-62cabe81af24' \
+  -H 'Content-Type: application/json; charset=UTF-8' \
+  -H 'x-nike-visitid: 5' \
+  'https://api.nike.com/buy/shipping_options/v2' 
+
+# HTTP/2 200 
+# content-type: application/json;charset=UTF-8
+# content-length: 1170
+# x-b3-traceid: 7ff23e122e7ef5f0
+# x-application-context: shippingoptions:prod:8080
+# x-edgeconnect-midmile-rtt: 34
+# x-edgeconnect-origin-mex-latency: 71
+# cache-control: private, max-age=0
+# expires: Thu, 23 May 2019 01:04:13 GMT
+# date: Thu, 23 May 2019 01:04:13 GMT
+# access-control-max-age: 86400
+# access-control-allow-credentials: false
+# access-control-allow-headers: *
+# access-control-allow-methods: GET,POST,OPTIONS,PUT,DELETE
+# access-control-allow-origin: *
+# set-cookie: bm_sz=A516EA7BE026BA84BDE8ACFD247E0038~YAAQxiQ3Fwz8adFqAQAAto834gPiJ6ZpGWZy0jr6UDX5mrcx0I/j+7ybPwqjqdXDbdujpICTZYLd8Tt4sJv9161IqbqSlmQ8xfFwnoN43Bp6/81IPv1qU47TVj/edeb67ckJ0elMwlZ8xfInWlRF16Z1PwR+7HlFnpRTy7XAPrYNjPfQe+vq1TbWAi+oCQ==; Domain=.nike.com; Path=/; Expires=Thu, 23 May 2019 05:04:13 GMT; Max-Age=14400; HttpOnly
+# set-cookie: _abck=BC77DE023C995D06363F8CB04C440F37~-1~YAAQxiQ3Fw38adFqAQAAto834gFoOr/tjTFVVfh61vcAtLNlC0qQSgff0EzKa3htVcB2y31UnNv1amr/8iwGGPbl2q7ME1VvlKOhnAgA05qejou/tMvNC6NR3MBhm/bc2Rh2GbB3le0ybW87YW4DmLbM1H0CQVDiWwtTK8AO0qCq+em7IX0UMtHUNY4NnwLnpgSosxVDBAoJy0LiKL4m6hfk2bbOOvpC+NM8KDvP4Re1keQj+wHt+TXM5nxcT344nYHPHsecSCK5C74GQ7tY+8BT3D5rmglj0wY=~-1~-1~-1; Domain=.nike.com; Path=/; Expires=Fri, 22 May 2020 01:04:13 GMT; Max-Age=31536000; Secure
+
+# {"resourceType":"shippingOptions","country":"US","currency":"USD","items":[{"id":"590a1625-638e-4cee-afbb-6c1292647601","skuId":"a99d5708-37bf-5a05-83f6-b28d70f80b25","quantity":1,"shippingAddress":{"country":"US"},"shippingMethods":[{"id":"STANDARD","daysToArrive":5,"estimatedDelivery":{"id":"590a1625-638e-4cee-afbb-6c1292647601","range":{"minDate":"2019-05-29T01:04:13.167Z","maxDate":"2019-05-30T01:04:13.167Z"},"message":"Arrives 6-7 Days","eddDisabled":false},"priceInfo":{"cost":8.00,"discount":0,"total":8.00},"cutoffTime":"21:00:00"},{"id":"TWO_DAY","daysToArrive":4,"estimatedDelivery":{"id":"590a1625-638e-4cee-afbb-6c1292647601","range":{"minDate":"2019-05-25T01:04:13.167Z","maxDate":"2019-05-26T01:04:13.167Z"},"message":"Arrives 2-3 Days","eddDisabled":false},"priceInfo":{"cost":15.00,"discount":0,"total":15.00},"cutoffTime":"01:00:00"},{"id":"NEXT_DAY","daysToArrive":2,"estimatedDelivery":{"id":"590a1625-638e-4cee-afbb-6c1292647601","range":{"minDate":"2019-05-24T01:04:13.167Z","maxDate":"2019-05-26T01:04:13.167Z"},"message":"Arrives 1-3 Days","eddDisabled":false},"priceInfo":{"cost":25.00,"discount":0,"total":25.00},"cutoffTime":"23:00:00"}]}]}% 
+
+# https://paymentcc.nike.com/creditcardsubmit/e179ead0-e446-4715-ba7e-d38bd2b1365c/store
+# {"accountNumber":"4147202398391688","cardType":"VISA","expirationMonth":"10","expirationYear":"2023","creditCardInfoId":"e179ead0-e446-4715-ba7e-d38bd2b1365c","cvNumber":"013"}
+

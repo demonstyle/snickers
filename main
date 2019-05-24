@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# 1. Add shoe to cart using skuId
+curl -i -X 'PATCH' \
+    -H 'accept: application/json' \
+    -H 'appid: com.nike.commerce.nikedotcom.web' \
+    -H 'Content-Type: application/json; charset=UTF-8' \
+    -H 'x-nike-visitid: 5' \
+    -H 'x-nike-visitorid: 6d326d40-52a3-4557-8309-62cabe81af24' \
+    -d '[{"op":"add","path":"/items","value":{"skuId":"a99d5708-37bf-5a05-83f6-b28d70f80b25","quantity":1}}]' \
+    'https://api.nike.com/buy/carts/v2/US/NIKE/NIKECOM?modifiers=VALIDATELIMITS,VALIDATEAVAILABILITY'
+
+# Add shipping address
+curl -i -X 'PUT' \
+    -H 'accept: application/json' \
+    -H 'appid: com.nike.commerce.nikedotcom.web' \
+    -H 'Content-Type: application/json; charset=UTF-8' \
+    -H 'x-nike-visitid: 5' \
+    -H 'x-nike-visitorid: 6d326d40-52a3-4557-8309-62cabe81af24' \
+    -d '{"request":{"email":"paulyeo21@gmail.com","country":"US","currency":"USD","locale":"en_US","channel":"NIKECOM","items":[{"id":"eb56c4ad-1759-4562-a24f-338c6ae5a25e","skuId":"a99d5708-37bf-5a05-83f6-b28d70f80b25","shippingAddress":{"address1":"9651 Nadine Street","address2":"","city":"Temple City","state":"CA","country":"US","postalCode":"91780","preferred":false,"email":"paulyeo21@gmail.com","phoneNumber":"6265905973","addressId":"bdc1425a-cf20-4cec-9224-56aab7062acb"},"recipient":{"firstName":"Paul","lastName":"Yeo"},"shippingMethod":"STANDARD","quantity":1,"contactInfo":{"phoneNumber":"6265905973","email":"paulyeo21@gmail.com"}}],"promotionCodes":[]}}'
+
+# Create order with shipping and payment information
+# Requirements: checkoutId, productId, addressId, paymentInfoId, creditCardInfoId
+
+# {"checkoutId":"fce23e5a-f976-4f83-9ed6-f4959fe166a6","total":140.16,"currency":"USD","country":"US","items":[{"productId":"3a4be21a-b939-597c-a1bf-19d72ab29ac0","shippingAddress":{"address1":"9651 Nadine Street","address2":"","city":"Temple City","state":"CA","country":"US","postalCode":"91780","preferred":false,"email":"paulyeo21@gmail.com","phoneNumber":"6265905973","addressId":"5f56548d-1d35-4756-842d-5b7189ff1c27"}}],"paymentInfo":[{"id":"e179ead0-e446-4715-ba7e-d38bd2b1365c","creditCardInfoId":"e179ead0-e446-4715-ba7e-d38bd2b1365c","type":"CreditCard","cardType":"VISA","lastFour":"1688","expiryMonth":"10","expiryYear":"2023","accountNumber":"XXXXXXXXXXXX1688","billingInfo":{"name":{"firstName":"Paul","lastName":"Yeo"},"address":{"address1":"9651 Nadine Street","address2":"","city":"Temple City","state":"CA","postalCode":"91780","country":"US"},"contactInfo":{"phoneNumber":"6265905973","email":"paulyeo21@gmail.com"}},"dateOfBirth":""}]}
+
+# Before making checkout request
+
+# curl -i 'https://api.nike.com/payment/preview/v2' -H 'Accept: application/json' -H 'appid: com.nike.commerce.checkout.web' -H 'Content-Type: application/json; charset=UTF-8' -H 'x-nike-visitid: 5' -H 'x-nike-visitorid: 6d326d40-52a3-4557-8309-62cabe81af24' -d '{"checkoutId":"78d445AA-965D-aC70-1770-4fB029ec73dE","total":140.16,"currency":"USD","country":"US","items":[{"productId":"3a4be21a-b939-597c-a1bf-19d72ab29ac0","shippingAddress":{"address1":"9651 Nadine Street","address2":"","city":"Temple City","state":"CA","country":"US","postalCode":"91780","preferred":false,"email":"paulyeo21@gmail.com","phoneNumber":"6265905973","addressId":"5f56548d-1d35-4756-842d-5b7189ff1c27"}}],"paymentInfo":[{"id":"e179ead0-e446-4715-ba7e-d38bd2b1365c","creditCardInfoId":"e179ead0-e446-4715-ba7e-d38bd2b1365c","type":"CreditCard","cardType":"VISA","lastFour":"1688","expiryMonth":"10","expiryYear":"2023","accountNumber":"XXXXXXXXXXXX1688","billingInfo":{"name":{"firstName":"Paul","lastName":"Yeo"},"address":{"address1":"9651 Nadine Street","address2":"","city":"Temple City","state":"CA","postalCode":"91780","country":"US"},"contactInfo":{"phoneNumber":"6265905973","email":"paulyeo21@gmail.com"}},"dateOfBirth":""}]}'
+
+# HTTP/2 202 
+# content-type: application/json;charset=utf-8
+# x-b3-traceid: f2ec053b7b2ad90c
+# x-application-context: paymentpreview:prod:8080
+# access-control-expose-headers: Content-Type,Location,Cache-Control,Retry-After
+# location: /payment/preview/v2/jobs/f0c2e77a-1c6c-4be5-8bf8-78ee2ba4118a
+# content-length: 201
+# x-edgeconnect-midmile-rtt: 4
+# x-edgeconnect-origin-mex-latency: 119
+# cache-control: private, no-cache
+# expires: Fri, 24 May 2019 02:20:30 GMT
+# date: Fri, 24 May 2019 02:20:30 GMT
+# access-control-max-age: 86400
+# access-control-allow-credentials: false
+# access-control-allow-headers: *
+# access-control-allow-methods: GET,POST,OPTIONS,PUT,DELETE
+# access-control-allow-origin: *
+# set-cookie: bm_sz=E5644D3281B7A581E1E83AB872CBC171~YAAQPfLzP8PQmstqAQAAacKj5wP/GKpSxIG6bFeQ8IR/qbZw70o+/Fe+0AHe8lULq7+4o1X4vA9lAgA/Ddf/HOYRmOHSafFnpDUXvC8ygD/CcIwKBEojuAHFhLIMyXb5Ls9YKRa39xprxDR7wdQZWgbX/iShgISxPN/zMVDLcTp1HG9nZNTEUyw5wO9Tig==; Domain=.nike.com; Path=/; Expires=Fri, 24 May 2019 06:20:30 GMT; Max-Age=14400; HttpOnly
+# set-cookie: _abck=077C4F3C405071839D871EB01FE4BF25~-1~YAAQPfLzP8TQmstqAQAAacKj5wHehSflvwBCZIGPqE7ZlodxzCPKM3RG8dT7ewYa6nrTaxPcKF3rDB8MpTPnGybybAZQZTtdZ7Z8zU7NjtE6z8SixA/ADYZ28GJGqdc7muhcqqRCqTtQ2NncPXB/2jiDVpobJfquzTG1Mrfa5X+rdwf2y+fpzivzwbsVV4Esmp+803WEm6wikLW6mzdiQ7MtIuCRePRHpDX8emefFtOM8mfZ4rVYP8+hNon5++9RNcheqKuSmE/NYKmXXQNI9xW2UcwX0DjZCFA=~-1~-1~-1; Domain=.nike.com; Path=/; Expires=Sat, 23 May 2020 02:20:30 GMT; Max-Age=31536000; Secure
+#
+# {"id":"f0c2e77a-1c6c-4be5-8bf8-78ee2ba4118a","status":"PENDING","resourceType":"payment/preview/jobs","links":{"self":{"ref":"/payment/preview/v2/jobs/f0c2e77a-1c6c-4be5-8bf8-78ee2ba4118a"}},"eta":500}% 
