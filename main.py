@@ -3,160 +3,277 @@ import string
 import requests
 import sys
 
-def generateId():
-    # Generate random id for nike requests that match regex:
-    # ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
-    # i.e. c287c8b3-bd5f-4341-959c-d9121997662c
-    return generateAlphanumeric(8) + '-' \
-            + generateAlphanumeric(4) + '-' \
-            + generateAlphanumeric(4) + '-' \
-            + generateAlphanumeric(4) + '-' \
-            + generateAlphanumeric(12)
+class Recipient:
+    def __init__(self, fname, lname, phoneNumber, email, address1, city, state, country, postalCode):
+        self.fname = fname
+        self.lname = lname
+        self.phoneNumber = phoneNumber
+        self.email = email
+        self.address1 = address1
+        self.city = city
+        self.state = state
+        self.country = country
+        self.postalCode = postalCode
 
-def generateAlphanumeric(length):
-    return ''.join(random.choices('0123456789abcdefABCDEF', k=length))
+class SnickersBot:
+    PRODUCT_ID_KEY = 'id'
+    PRODUCT_DESCRIPTION_KEY = 'fullTitle'
+    COLOR_DESCRIPTION_KEY = 'colorDescription'
+    STYLE_COLOR_KEY = 'styleColor'
 
-def getProductId(skuId):
-    # Hit nike sku endpoint to get product id.
-    # Sample json response:
-    # {'skus': [{'id': 'a99d5708-37bf-5a05-83f6-b28d70f80b25', 'nikeSize': '10', 'countrySpecifications': [{'country': 'US', 'localizedSize': 'M 10 / W 11.5'}], 'gtin': '00193145226456', 'product': {'id': '3a4be21a-b939-597c-a1bf-19d72ab29ac0', 'brand': 'Nike', 'productType': 'FOOTWEAR', 'styleColor': 'CI2666-100', 'styleType': 'INLINE', 'pid': '12629203', 'price': {'discounted': False}, 'content': {'fullTitle': 'PG 3 NASA Basketball Shoe', 'subtitle': 'Basketball Shoe', 'colorDescription': 'White/Metallic Gold'}, 'imageSet': {'images': [{'company': 'DotCom', 'view': 'CI2666_100_A_PREM'}, {'company': 'DotCom', 'view': 'CI2666_100_B_PREM'}, {'company': 'DotCom', 'view': 'CI2666_100_C_PREM'}, {'company': 'DotCom', 'view': 'CI2666_100_D_PREM'}, {'company': 'DotCom', 'view': 'CI2666_100_E_PREM'}, {'company': 'DotCom', 'view': 'CI2666_100_F_PREM'}, {'company': 'DotCom', 'view': 'CI2666_100_N_PREM'}, {'company': 'DotCom', 'view': 'CI2666_100_O_PREM'}, {'company': 'DotCom', 'view': 'CI2666_100_P_PREM'}]}}}]}
-    url = f'https://www.nike.com/checkout/services/v1/skus/{skuId}?country=us&language=en-US'
-    try:
-        print(f'Getting product id of {skuId}')
-        r = requests.get(url)
-        r.raise_for_status()
-        response = r.json()
-        return response['skus'][0]['product']['id']
-    except requests.exceptions.HTTPError as err:
-        print(err)
-        sys.exit(1)
-
-def addToCart(skuId):
-    # Add sneaker to cart by sku id.
-    # Sample response:
-    # {"id":"a64f80fe-c84f-4bc9-9ef3-13274fc7a6d1","country":"US","currency":"USD","brand":"NIKE","channel":"NIKECOM","totals":{"subtotal":120,"discountTotal":0,"valueAddedServicesTotal":0,"total":120,"quantity":1},"items":[{"id":"3bd05e1c-863b-4485-bf11-5454337b05ab","skuId":"a99d5708-37bf-5a05-83f6-b28d70f80b25","quantity":1,"priceInfo":{"price":120,"subtotal":120,"discount":0,"valueAddedServices":0,"total":120,"priceSnapshotId":"c4509ee8-c050-4165-83f7-407677f1d9c4","msrp":120,"fullPrice":120}}],"links":{"self":{"ref":"/buy/carts/v2/US/NIKE/NIKECOM"}},"resourceType":"cart"}
-    url = 'https://api.nike.com/buy/carts/v2/US/NIKE/NIKECOM?modifiers=VALIDATELIMITS,VALIDATEAVAILABILITY'
-    headers = {
-        'accept': 'application/json',
-        'appid': 'com.nike.commerce.nikedotcom.web',
-        'Content-Type': 'application/json; charset=UTF-8',
-        'x-nike-visitid': '7',
-        'x-nike-visitorid': '6d326d40-52a3-4557-8309-62cabe81af24'
-    }
-    payload = [{
-        'op': 'add',
-        'path': '/items',
-        'value': {
-            'skuId': skuId,
-            'quantity': 1
+    def __init__(self, skuId, recipient, sessionId=None):
+        self.skuId = skuId
+        self.productId = None
+        self.productDescription = None
+        self.styleColor = None
+        self.colorDescription = None
+        self.cartItemId = None
+        self.recipient = recipient
+        self.shippingId = None
+        # Get product info and set as instance variables
+        self.getProductInfo()
+        self.headers = {
+            'accept': 'application/json',
+            'appid': 'com.nike.commerce.nikedotcom.web',
+            'Content-Type': 'application/json; charset=UTF-8',
+            'x-nike-visitid': '7',
+            'x-nike-visitorid': '6d326d40-52a3-4557-8309-62cabe81af24'
         }
-    }]
 
-    try:
-        r = requests.patch(url, json=payload, headers=headers)
-        r.raise_for_status()
-        print(f'Added {skuId} to cart')
-        print(r.status_code)
-        response = r.json()
-        return response['items']
-    except requests.exceptions.HTTPError as err:
-        # print(f'Failed to add {skuId} to cart')
-        print(err)
-        sys.exit(1)
+    def __repr__(self):
+        return f'SnickersBot# {vars(self)}'
 
-def removeFromCart(cartItemId):
-    url = 'https://api.nike.com/buy/carts/v2/US/NIKE/NIKECOM?modifiers=VALIDATELIMITS,VALIDATEAVAILABILITY'
-    headers = {
-        'accept': 'application/json',
-        'appid': 'com.nike.commerce.nikedotcom.web',
-        'Content-Type': 'application/json; charset=UTF-8',
-        'x-nike-visitid': '5',
-        'x-nike-visitorid': '6d326d40-52a3-4557-8309-62cabe81af24'
-    }
-    payload = [{
-        'op': 'remove',
-        'path': '/items',
-        'value': {
-            'id': cartItemId
-        }
-    }]
+    def getProductInfo(self):
+        """Get product information by hitting nike's skus endpoint.
 
-    try:
-        r = requests.patch(url, json=payload, headers=headers)
-        r.raise_for_status()
-        print(f'Deleted {cartItemId} from cart')
-        print(r.status_code)
-        response = r.json()
-        return response['items']
-    except requests.exceptions.HTTPError as err:
-        # print(f'Failed to delete {cartItemId} from cart')
-        print(err)
-        sys.exit(1)
+        Args:
+            skuId (str): Shoe skuId.
+        Returns:
+            None
+        Raises:
+            requests.exceptions.HTTPError: If HTTP request returned unsuccessful status code
+        """
 
-def setPaymentInfo(productId):
-    url = 'https://api.nike.com/payment/preview/v2'
-    headers = {
-        'accept': 'application/json',
-        'appid': 'com.nike.commerce.nikedotcom.web',
-        'Content-Type': 'application/json; charset=UTF-8',
-        'x-nike-visitid': '5',
-        'x-nike-visitorid': '6d326d40-52a3-4557-8309-62cabe81af24'
-    }
-    payload = {
-        'checkoutId': 'fce23e5a-f976-4f83-9ed6-f4959fe166a6',
-        'total': 140.16,
-        'currency': 'USD',
-        'country': 'US',
-        'items':[{
-            'productId':productId,
-            'shippingAddress':{
-                'address1':'9651 Nadine Street',
-                'address2':'',
-                'city':'Temple City',
-                'state':'CA',
-                'country':'US',
-                'postalCode':'91780',
-                'preferred':false,
-                'email':'paulyeo21@gmail.com',
-                'phoneNumber':'6265905973',
-                'addressId':'5f56548d-1d35-4756-842d-5b7189ff1c27'
-            }
-        }],
-        'paymentInfo':[{
-            'id':'e179ead0-e446-4715-ba7e-d38bd2b1365c',
-            'creditCardInfoId':'e179ead0-e446-4715-ba7e-d38bd2b1365c',
-            'type':'CreditCard',
-            'cardType':'VISA',
-            'lastFour':'1688',
-            'expiryMonth':'10',
-            'expiryYear':'2023',
-            'accountNumber':'XXXXXXXXXXXX1688',
-            'billingInfo':{
-                'name':{
-                    'firstName':'Paul',
-                    'lastName':'Yeo'
-                },
-                'address':{
-                    'address1':'9651 Nadine Street',
-                    'address2':'',
-                    'city':'Temple City',
-                    'state':'CA',
-                    'postalCode':'91780',
-                    'country':'US'
-                },
-                'contactInfo':{
-                    'phoneNumber':'6265905973',
-                    'email':'paulyeo21@gmail.com'
+        try:
+            url = f'https://www.nike.com/checkout/services/v1/skus/{self.skuId}?country=us&language=en-US'
+            r = requests.get(url)
+            r.raise_for_status()
+            response = r.json()
+            self.productId = response['skus'][0]['product'][self.PRODUCT_ID_KEY]
+            self.productDescription = response['skus'][0]['product']['content'][self.PRODUCT_DESCRIPTION_KEY]
+            self.styleColor = response['skus'][0]['product'][self.STYLE_COLOR_KEY]
+            self.colorDescription = response['skus'][0]['product']['content'][self.COLOR_DESCRIPTION_KEY]
+        except requests.exceptions.HTTPError as err:
+            print(f'Failed to get product information for {self.skuId}')
+            print(err)
+            sys.exit(1)
+
+    def addToCart(self):
+        """Add product to cart by given session Id and set cart item Id.
+
+        Args:
+            None
+        Return:
+            None
+        Raises:
+            requests.exceptions.HTTPError: If HTTP request returned unsuccessful status code
+        """
+
+        try:
+            url = 'https://api.nike.com/buy/carts/v2/US/NIKE/NIKECOM?modifiers=VALIDATELIMITS,VALIDATEAVAILABILITY'
+            payload = [{
+                'op': 'add',
+                'path': '/items',
+                'value': {
+                    'skuId': self.skuId,
+                    'quantity': 1
                 }
-            },
-            'dateOfBirth':''
-        }]
-    }
+            }]
+            r = requests.patch(url, json=payload, headers=self.headers)
+            r.raise_for_status()
+            response = r.json()
+            self.cartItemId = response['items'][0]['id']
+        except requests.exceptions.HTTPError as err:
+            print(f'Failed to add {self.skuId} to cart')
+            print(err)
+            sys.exit(1)
 
-# sku = input('Enter sneaker SKU: ')
-sku = 'a99d5708-37bf-5a05-83f6-b28d70f80b25'
-# print(getProductId(sku))
-cartItems = addToCart(sku)
-for item in cartItems:
-    removeFromCart(item['id'])
+    def removeFromCart(self):
+        """Remove product from cart by given session Id and cart item Id.
+
+        Args:
+            None
+        Return:
+            None
+        Raises:
+            requests.exceptions.HTTPError: If HTTP request returned unsuccessful status code
+        """
+
+        try:
+            url = 'https://api.nike.com/buy/carts/v2/US/NIKE/NIKECOM?modifiers=VALIDATELIMITS,VALIDATEAVAILABILITY'
+            payload = [{
+                'op': 'remove',
+                'path': '/items',
+                'value': {
+                    'id': self.cartItemId
+                }
+            }]
+            r = requests.patch(url, json=payload, headers=self.headers)
+            r.raise_for_status()
+            self.cartItemId = None
+        except requests.exceptions.HTTPError as err:
+            print(f'Failed to remove {self.cartItemId} from cart')
+            print(err)
+            sys.exit(1)
+
+    def setShippingInfo(self):
+        try:
+            url = 'https://api.nike.com/buy/cart_reviews/v1/'
+            self.shippingId = SnickersBot.generateNikeId()
+            payload = {
+                'resourceType':'buy/cart_reviews',
+                'country':'US',
+                'currency':'USD',
+                'brand':'NIKE',
+                'channel':'NIKECOM',
+                'items':[{
+                    'id': self.shippingId,
+                    'skuId': self.skuId,
+                    'shippingAddress':{
+                        'address1': recipient.address1,
+                        'city': recipient.city,
+                        'state': recipient.state,
+                        'postalCode': recipient.postalCode,
+                        'country': recipient.country,
+                        'email': recipient.email,
+                        'phoneNumber': recipient.phoneNumber,
+                        'firstName': recipient.fname,
+                        'lastName': recipient.lname
+                    },
+                    'recipient':{
+                        'firstName': recipient.fname,
+                        'lastName': recipient.lname
+                    },
+                    'shippingMethod':{'id':'STANDARD'},
+                    'quantity':1,
+                    'contactInfo':{
+                        'phoneNumber': recipient.phoneNumber,
+                        'email': recipient.email
+                    }
+                }],
+                'promotionCodes':[]
+            }
+            r = requests.post(url, json=payload, headers=self.headers)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            print(f'Failed to set shipping information')
+            print(err)
+            sys.exit(1)
+
+    def setPaymentInfo(self):
+        url = 'https://api.nike.com/payment/preview/v2'
+        payload = {
+            'checkoutId': 'fce23e5a-f976-4f83-9ed6-f4959fe166a6',
+            'total': 140.16,
+            'currency': 'USD',
+            'country': 'US',
+            'items':[{
+                'productId': self.productId,
+                'shippingAddress':{
+                    'address1': recipient.address1,
+                    'address2':'',
+                    'city': recipient.city,
+                    'state': recipient.state,
+                    'country': recipient.country,
+                    'postalCode': recipient.postalCode,
+                    'preferred':false,
+                    'email': recipient.email,
+                    'phoneNumber': recipient.phoneNumber,
+                    'addressId': self.shippingId
+                }
+            }],
+            'paymentInfo':[{
+                'id':'e179ead0-e446-4715-ba7e-d38bd2b1365c',
+                'creditCardInfoId':'e179ead0-e446-4715-ba7e-d38bd2b1365c',
+                'type':'CreditCard',
+                'cardType':'VISA',
+                'lastFour':'1688',
+                'expiryMonth':'10',
+                'expiryYear':'2023',
+                'accountNumber':'XXXXXXXXXXXX1688',
+                'billingInfo':{
+                    'name':{
+                        'firstName':'Paul',
+                        'lastName':'Yeo'
+                    },
+                    'address':{
+                        'address1':'9651 Nadine Street',
+                        'address2':'',
+                        'city':'Temple City',
+                        'state':'CA',
+                        'postalCode':'91780',
+                        'country':'US'
+                    },
+                    'contactInfo':{
+                        'phoneNumber':'6265905973',
+                        'email':'paulyeo21@gmail.com'
+                    }
+                },
+                'dateOfBirth':''
+            }]
+        }
+
+    def getCartInfo(self):
+        try:
+            url = 'https://api.nike.com/buy/carts/v2/US/NIKE/NIKECOM'
+            r = requests.get(url, headers=self.headers)
+            r.raise_for_status()
+            return r.json()
+        except requests.exceptions.HTTPError as err:
+            print(f'Failed to get cart information')
+            print(err)
+            sys.exit(1)
+
+    @staticmethod
+    def generateNikeId():
+        """Generate a random Id for nike requests that matches the following regex:
+        ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+
+        Args:
+            None
+
+        Returns:
+            str: Random alphanumeric Id, i.e. c287c8b3-bd5f-4341-959c-d9121997662c.
+        """
+
+        return SnickersBot.generateAlphanumeric(8) + '-' \
+                + SnickersBot.generateAlphanumeric(4) + '-' \
+                + SnickersBot.generateAlphanumeric(4) + '-' \
+                + SnickersBot.generateAlphanumeric(4) + '-' \
+                + SnickersBot.generateAlphanumeric(12)
+
+    @staticmethod
+    def generateAlphanumeric(length):
+        """Generate a random alphanumeric [0-9a-fA-F] string of given length.
+
+        Args:
+            length (int): The length of return string.
+
+        Returns:
+            str: Random alphanumeric string.
+        """
+
+        return ''.join(random.choices('0123456789abcdefABCDEF', k=length))
+
+if __name__ == '__main__':
+    # sku = input('Enter sneaker SKU: ')
+    me = Recipient('paul', 'yeo', '6265905973', 'paulyeo21@gmail.com', \
+            '9651 Nadine Street', 'Temple City', 'CA', 'USA', '91780')
+    skuId = 'a99d5708-37bf-5a05-83f6-b28d70f80b25'
+    bot = SnickersBot(skuId, me)
+    print(bot.getCartInfo())
+    # bot.addToCart()
+    # bot.removeFromCart()
+    # print(bot)
+    # print(SnickersBot.generateNikeId())
 
