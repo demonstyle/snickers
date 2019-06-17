@@ -37,7 +37,8 @@ class SnickersBot:
             'appid': 'com.nike.commerce.nikedotcom.web',
             'Content-Type': 'application/json; charset=UTF-8',
             'x-nike-visitid': '7',
-            'x-nike-visitorid': '6d326d40-52a3-4557-8309-62cabe81af24'
+            'x-nike-visitorid': SnickersBot.generateNikeId()
+            # 'x-nike-visitorid': '6d326d40-52a3-4557-8309-62cabe81af24'
         }
 
     def __repr__(self):
@@ -234,6 +235,24 @@ class SnickersBot:
             print(err)
             sys.exit(1)
 
+    def login(self):
+        try:
+            url = 'https://unite.nike.com/login'
+            payload = {
+                'username': 'paulyeo21@gmail.com',
+                'password': 'Pauly3ok',
+                'ux_id': 'com.nike.commerce.nikedotcom.web',
+                'grant_type': 'password'
+            }
+            r = requests.post(url, headers=self.headers)
+            r.raise_for_status()
+            return r.json()
+        except requests.exceptions.HTTPError as err:
+            print(f'Failed to get cart information')
+            print(err)
+            sys.exit(1)
+
+
     @staticmethod
     def generateNikeId():
         """Generate a random Id for nike requests that matches the following regex:
@@ -271,7 +290,8 @@ if __name__ == '__main__':
             '9651 Nadine Street', 'Temple City', 'CA', 'USA', '91780')
     skuId = 'a99d5708-37bf-5a05-83f6-b28d70f80b25'
     bot = SnickersBot(skuId, me)
-    print(bot.getCartInfo())
+    bot.login()
+    # print(bot.getCartInfo())
     # bot.addToCart()
     # bot.removeFromCart()
     # print(bot)
